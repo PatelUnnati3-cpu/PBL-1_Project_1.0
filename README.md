@@ -4,7 +4,7 @@ A real-time phishing URL detector built with Python Flask &amp; Chrome Extension
 # 🛡️ Phishing Website Detector
 
 A real-time phishing URL detection tool built with Python Flask and Chrome Extension.
-Built as part of IBM SkillsBuild Foundation — Cybersecurity Course.
+Built as part of Project Based Learning-1.
 
 ---
 
