@@ -1,153 +1,77 @@
+# Phishing Website Detector
 
-# PBL-1_Project_1.0-
-A real-time phishing URL detector built with Python Flask &amp; Chrome Extension. Analyzes URLs for suspicious patterns, assigns a risk score (0-100%), flags threats with detailed reasoning, and automatically scans all links on any webpage.
-# 🛡️ Phishing Website Detector
-
-A real-time phishing URL detection tool built with Python Flask and Chrome Extension.
-Built as part of Project Based Learning-1.
+A real-time phishing and malicious link detection system that identifies suspicious URLs before you interact with them — combining rule-based heuristic analysis, real-time threat intelligence, domain-age verification, and local caching, with full transparency into why a URL is flagged.
 
 ---
 
-## 📁 Project Structure
+## Features
 
+- **Heuristic URL Analysis Engine** — checks each URL against 9 weighted rules: IP-based hostnames, `@` symbol usage, double-slash redirects, suspicious keywords (login, verify, banking, etc.), dash usage, dot count, URL length, HTTPS presence, and subdomain count
+- **Real-Time Threat Intelligence** — live lookup against URLhaus (abuse.ch), a free, community-maintained database of confirmed malicious URLs
+- **WHOIS Domain-Age Verification** — flags domains registered within the last 30 days, a common phishing indicator
+- **Local Caching (SQLite)** — stores previously checked results locally for instant repeat lookups and offline resilience if the threat-intelligence service is unavailable
+- **Weighted, Transparent Explainability** — every flagged URL shows the exact point contribution of each triggered rule, not just a final score
+- **Web Dashboard** — manual URL checker with live risk visualization and a session-based check history log
+- **Chrome Extension** — real-time scanning of links on any webpage, plus a standalone popup checker with auto-fill of the current tab's URL
+
+---
+
+## Project Structure
 Phishing_detector/
-
-├── extension/          # Chrome Extension files
-
-│   ├── manifest.json
-
-│   ├── popup.html
-
-│   ├── popup.js
-
-│   ├── background.js
-
-│   └── content.js
-
+├── extension/ # Chrome Extension files
+│ ├── manifest.json
+│ ├── popup.html
+│ ├── popup.js
+│ ├── content.js
+│ └── background.js
 ├── templates/
-
-│   └── index.html      # Web interface
-
-├── venv/               # Virtual environment
-
-├── app.py              # Flask backend server
-
-├── model.py            # Detection engine
-
-├── phishing_model.pkl  # Saved model
-
+│ └── index.html # Web dashboard
+├── app.py # Flask backend / API server
+├── model.py # Detection engine (heuristics + URLhaus + WHOIS + caching)
 └── README.md
 
 ---
 
-## ⚙️ Requirements
+## Setup
 
-- Python 3.12
-- Google Chrome browser
-- VS Code (recommended)
-Note: (plz)Open the repo in vs code for better integration.
+**1. Install dependencies:**
+pip install flask flask-cors requests python-whois
 
----
-
-## 🚀 Setup & Run
-
-### Step 1 — Clone or Download the project
-Place the `Phishing_detector` folder anywhere on your system (avoid OneDrive).
-
-### Step 2 — Open in VS Code
-File → Open Folder → Select Phishing_detector
-
-### Step 3 — Open Terminal in VS Code
-Terminal → New Terminal
-
-# 1. to create a venv, run:
-python -m venv venv
-
-### Step 4 — Environment Configuration (Choose Option A or B)
-
-🔹 Option A: You are using Windows**
-now you can activate it using:
-
-.\venv\Scripts\activate
-
-Note: You should see (venv) appear in your terminal. You can now skip Option B and  proceed directly to Step 5! ➡️
-
-🔸 Option B: You are using Mac, Linux, or hit compatibility issues
-If you are on a different operating system, you must delete the existing venv folder and generate a fresh one compatible with your OS:
-#  Activate the new environment based on your OS:
-# For Mac/Linux Terminal:
-source venv/bin/activate
-
-# For Windows (if resetting):
-.\venv\Scripts\activate
-(Python will automatically regenerate a fresh __pycache__ once the scripts run).
-
-# Step 5 — Install Dependencies
-pip install flask flask-cors
-
-### Step 6 — Run the Detection Model
-python model.py
-
-Expected output:
-
-Phishing Detector model ready!
-URL: https://www.google.com → 0% SAFE
-URL: http://192.168.1.1/login/verify → 80% PHISHING
-
-### Step 7 — Start Flask Server
+**2. Run the application:**
 python app.py
 
-Expected output:
-Running on http://127.0.0.1:5000
-Note:Keep the Flask server (python app.py) running while using the Chrome extension or web interface.
+That's it — the server starts at `http://127.0.0.1:5000`, initializing the local threat cache automatically on first run.
 
-### Step 8 — Open Web Interface
-Open Chrome and go to:
-http://127.0.0.1:5000
+**3. Use it:**
+- **Web Dashboard:** open `http://127.0.0.1:5000` in your browser
+- **Chrome Extension:** go to `chrome://extensions`, enable Developer Mode, click "Load unpacked," and select the `extension` folder. Keep `python app.py` running in the background while using the extension.
 
 ---
 
-## 🔌 Load Chrome Extension
+## How It Works
 
-1. Open Chrome → go to `chrome://extensions`
-2. Enable **Developer Mode** (top right toggle)
-3. Click **Load unpacked**
-4. Select the `extension` folder
-5. Extension is now active!
-
----
-
-## 🧪 Test URLs
-
-| URL | Expected Result |
-|-----|----------------|
-| https://www.google.com | ✅ SAFE |
-| http://192.168.1.1/login/verify | 🚨 PHISHING |
-| http://paypal-secure-login.xyz/confirm | ⚠️ SUSPICIOUS |
+1. A URL is submitted via the web dashboard or Chrome Extension
+2. The system checks its local SQLite cache first — if already verified, the cached result is returned instantly
+3. If not cached, the URL is checked against URLhaus's live threat database
+4. The domain's registration age is checked via WHOIS
+5. The URL is run through the 9 heuristic checks
+6. All triggered signals are combined into a weighted risk score (0–100%), classified as SAFE, SUSPICIOUS, or PHISHING, with every contributing reason listed individually
 
 ---
 
-## 💡 How It Works
-
-1. User enters or clicks a URL
-2. Flask backend analyzes URL features:
-   - IP address usage
-   - Suspicious keywords
-   - HTTPS presence
-   - URL length
-   - Special characters
-3. Risk score (0-100%) is calculated
-4. Result shown with explanation
+## Output Example
+URL: http://192.168.1.1/login/verify
+Risk Score: 80% — PHISHING (threat intel: live, domain age: None days)
+Reasons (weighted):
++35 — Uses IP address instead of domain name
++25 — Contains suspicious keywords (login, verify, banking, etc.)
++20 — No HTTPS — connection is not secure
 
 ---
 
-## ⚠️ Note
+## Future Scope
 
-Keep the Flask server (`python app.py`) running while using the Chrome extension or web interface.
-
----
-
-## 👤 Author
-
-- Name: Patel Unnati Kanubhai
-  
+- Machine learning classifier trained on a public phishing-URL dataset
+- Multi-source threat-intelligence aggregation (additional APIs alongside URLhaus)
+- Browsing-history risk-log dashboard
+- Native mobile app with real-time QR-code phishing detection
