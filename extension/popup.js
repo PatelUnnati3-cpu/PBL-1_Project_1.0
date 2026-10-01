@@ -63,3 +63,4 @@ chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
     document.getElementById('urlInput').value = tabs[0].url;
   }
 });
+document.getElementById('checkBtn').addEventListener('click', checkURL);
